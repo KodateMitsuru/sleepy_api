@@ -164,7 +164,9 @@ app.post("/api/status", cors(corsOptions), async (req, res) => {
         }
         const prevstatus = await redis.get("status");
         if (status === prevstatus) {
-          await redis.set("status_mod_time", Date.now());
+          if (!status === "0") {
+            await redis.set("status_mod_time", Date.now());
+          }
           return res.status(204).send();
         }
         if (status === "0") {
@@ -175,7 +177,6 @@ app.post("/api/status", cors(corsOptions), async (req, res) => {
             await redis.set("prevstatus", prevappName);
           }
           await redis.set("status", status);
-          await redis.set("status_mod_time", Date.now());
           return res.status(204).send();
         }
         const appName = packageNameToAppName[status];
