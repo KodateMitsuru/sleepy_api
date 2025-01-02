@@ -132,6 +132,10 @@ app.use(cors(corsOptions));
 app.get("/api/status", cors(corsOptions), async (req, res) => {
   try {
     const status = await redis.get("status");
+    if (status === "0") {
+      const prevstatus = await redis.get("prevstatus");
+      return res.json({status: status || "unknown",prevstatus: prevstatus || "unknown"});
+    }
     res.json({status: status || "unknown"});
   } catch (e) {
     res.status(500).json({ error: "Internal Server Error" });
@@ -151,12 +155,25 @@ app.post("/api/status", cors(corsOptions), async (req, res) => {
         if (secret !== Secret) {
           return res.status(403).json({ error: "Forbidden" });
         }
-
+        const prevstatus = await redis.get("status");
+        if (status === prevstatus) {
+          return res.status(204).send();
+        }
+        if (status === "0") {
+          const prevappName = packageNameToAppName[prevstatus];
+          if (!prevappName) {
+            await redis.set("prevstatus", prevstatus);
+          } else {
+            await redis.set("prevstatus", prevappName);
+          }
+          await redis.set("status", status);
+          return res.status(204).send();
+        }
         const appName = packageNameToAppName[status];
         if (!appName) {
-            await redis.set("status", status);
+          await redis.set("status", status);
         } else {
-            await redis.set("status", appName);
+          await redis.set("status", appName);
         }
         res.status(204).send();
       } catch (e) {
