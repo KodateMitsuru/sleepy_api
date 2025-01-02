@@ -136,7 +136,9 @@ app.get("/api/status", cors(corsOptions), async (req, res) => {
     const lasttime = await redis.get("status_mod_time");
     if (currtime - lasttime > 10000) {
       await redis.set("status", "0");
-      await redis.set("prevstatus", status);
+      if (!status === "0") {
+        await redis.set("prevstatus", status);
+      }
       status = "0";
     }
     if (status === "0") {
