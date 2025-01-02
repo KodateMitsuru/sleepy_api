@@ -131,10 +131,17 @@ app.use(cors(corsOptions));
 
 app.get("/api/status", cors(corsOptions), async (req, res) => {
   try {
-    const status = await redis.get("status");
+    let status = await redis.get("status");
+    const currtime = Date.now();
+    const lasttime = await redis.get("status_mod_time");
+    if (currtime - lasttime > 10000) {
+      await redis.set("status", "0");
+      await redis.set("prevstatus", status);
+      status = "0";
+    }
     if (status === "0") {
       const prevstatus = await redis.get("prevstatus");
-      return res.json({status: status || "unknown",prevstatus: prevstatus || "unknown"});
+      return res.json({status: status || "unknown",prevstatus: prevstatus || "unknown",prevtime: currtime-lasttime});
     }
     res.json({status: status || "unknown"});
   } catch (e) {
@@ -157,6 +164,7 @@ app.post("/api/status", cors(corsOptions), async (req, res) => {
         }
         const prevstatus = await redis.get("status");
         if (status === prevstatus) {
+          await redis.set("status_mod_time", Date.now());
           return res.status(204).send();
         }
         if (status === "0") {
@@ -167,6 +175,7 @@ app.post("/api/status", cors(corsOptions), async (req, res) => {
             await redis.set("prevstatus", prevappName);
           }
           await redis.set("status", status);
+          await redis.set("status_mod_time", Date.now());
           return res.status(204).send();
         }
         const appName = packageNameToAppName[status];
@@ -175,6 +184,7 @@ app.post("/api/status", cors(corsOptions), async (req, res) => {
         } else {
           await redis.set("status", appName);
         }
+        await redis.set("status_mod_time", Date.now());
         res.status(204).send();
       } catch (e) {
         res.status(500).json({ error: `${e}` });
