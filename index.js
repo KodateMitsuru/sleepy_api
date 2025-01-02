@@ -29,7 +29,7 @@ const packageNameToAppName = {
 
 app.use(cors(corsOptions));
 
-app.get("/api/getstatus", cors(corsOptions), async (req, res) => {
+app.get("/api/status", cors(corsOptions), async (req, res) => {
   try {
     const status = await redis.get("status");
     res.json({status: status || "unknown"});
@@ -38,7 +38,7 @@ app.get("/api/getstatus", cors(corsOptions), async (req, res) => {
   }
 });
 
-app.post("/api/setstatus", cors(corsOptions), async (req, res) => {
+app.post("/api/status", cors(corsOptions), async (req, res) => {
     try {
         const secret = req.query.secret;
         const status = req.query.status;
