@@ -131,21 +131,9 @@ app.use(cors(corsOptions));
 
 app.get("/api/status", cors(corsOptions), async (req, res) => {
   try {
-    let status = await redis.get("status");
-    const currtime = Date.now();
-    const lasttime = await redis.get("status_mod_time");
-    if (currtime - lasttime > 10000) {
-      await redis.set("status", "0");
-      if (!status === "0") {
-        await redis.set("prevstatus", status);
-      }
-      status = "0";
-    }
-    if (status === "0") {
-      const prevstatus = await redis.get("prevstatus");
-      return res.json({status: status || "unknown",prevstatus: prevstatus || "unknown",prevtime: currtime-lasttime});
-    }
-    res.json({status: status || "unknown"});
+    const status = await redis.get("status");
+    const modtime = await redis.get("status_mod_time");
+    res.json({status: status,modtime: modtime});
   } catch (e) {
     res.status(500).json({ error: "Internal Server Error" });
   }
@@ -163,23 +151,6 @@ app.post("/api/status", cors(corsOptions), async (req, res) => {
         
         if (secret !== Secret) {
           return res.status(403).json({ error: "Forbidden" });
-        }
-        const prevstatus = await redis.get("status");
-        if (status === prevstatus) {
-          if (!status === "0") {
-            await redis.set("status_mod_time", Date.now());
-          }
-          return res.status(204).send();
-        }
-        if (status === "0") {
-          const prevappName = packageNameToAppName[prevstatus];
-          if (!prevappName) {
-            await redis.set("prevstatus", prevstatus);
-          } else {
-            await redis.set("prevstatus", prevappName);
-          }
-          await redis.set("status", status);
-          return res.status(204).send();
         }
         const appName = packageNameToAppName[status];
         if (!appName) {
