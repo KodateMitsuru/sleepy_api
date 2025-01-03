@@ -5,14 +5,12 @@ SECRET="password"
 while true;do 
     CURRENT_FOCUS=`/system/bin/dumpsys activity activities | grep topResumedActivity`
     if [ ! -z "$CURRENT_FOCUS" ]; then
+	#去除多余内容
         CURRENT_FOCUS=$(echo $CURRENT_FOCUS | awk '{print $3}')
-        # 去除空格
         CURRENT_FOCUS=$(echo $CURRENT_FOCUS | awk -F'/' '{print $1}')
         #获取路径
-        PACKAGE_PATH=$(cmd package list packages -f $CURRENT_FOCUS | grep /$CURRENT_FOCUS-)
-        if [ -z "$PACKAGE_PATH" ]; then
-            PACKAGE_PATH=$(cmd package list packages -f $CURRENT_FOCUS)
-        fi
+        PACKAGE_PATH=$(cmd package list packages -f $CURRENT_FOCUS | grep -E "$CURRENT_FOCUS$")
+	#去除多余内容
         PACKAGE_PATH=${PACKAGE_PATH#*:}
         PACKAGE_PATH=${PACKAGE_PATH%=*}
         PACKAGE_NAME=$(aapt dump badging $PACKAGE_PATH | grep application-label-zh-CN)
