@@ -141,8 +141,8 @@ app.get("/api/status", cors(corsOptions), async (req, res) => {
 
 app.post("/api/status", cors(corsOptions), async (req, res) => {
     try {
-        const secret = req.query.secret;
-        const status = req.query.status;
+        const secret = req.body.secret;
+        const status = req.body.status;
     
         if (!secret || !status) {
           return res.status(400).json({ error: "Missing secret or status" });
