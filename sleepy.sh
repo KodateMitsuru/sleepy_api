@@ -21,7 +21,7 @@ while true;do
         PACKAGE_NAME=${PACKAGE_NAME%\'*}
         # 输出一下PACKAGE_NAME
         echo "$PACKAGE_NAME"
-        curl -X POST "$URL?secret=$SECRET&status=$PACKAGE_NAME"
+        curl -X POST "$URL" -H "Content-type: application/json" -d '{"secret":"'"$SECRET"'","package":"'"$PACKAGE_NAME"'"}' #防止PACKAGE_NAME中有特殊字符
     fi
     sleep 1
 done
