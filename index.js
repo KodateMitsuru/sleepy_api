@@ -6,7 +6,7 @@ app.use(express.json());
 
 const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
 const redis = new Redis(REDIS_URL);
-const Secret = process.env.SECRECT || "password";
+const Secret = process.env.SECRET || "password";
 
 const corsOptions = {
   origin: "*",
