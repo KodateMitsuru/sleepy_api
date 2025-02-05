@@ -4,21 +4,24 @@ import requests
 import time
 import subprocess
 import logging
+from logging.handlers import TimedRotatingFileHandler
 
 URL = "https://api.kodatemitsuru.com/api/status"
 SECRET = "password"
 
 cache_dir = os.path.join(os.path.expanduser('~'), '.cache', 'sleepy')
 os.makedirs(cache_dir, exist_ok=True)
-log_file_path = os.path.join(cache_dir, 'sleepy_log.txt')
-log_handler = logging.handlers(
+log_file_name = 'sleepy_log'
+log_file_path = os.path.join(cache_dir, log_file_name)
+log_handler = TimedRotatingFileHandler(
     log_file_path,
-    when='midnight',  # 每天午夜轮转日志
-    interval=1,  # 间隔1天
-    backupCount=7  # 保留7天的日志文件
+    when='S',
+    interval=1,
+    backupCount=7
 )
+
 log_handler.setLevel(logging.INFO)
-log_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
+log_handler.setFormatter(logging.Formatter('[%(levelname)s] %(asctime)s - %(message)s',"%Y-%m-%d %H:%M:%S"))
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -54,21 +57,24 @@ def get_package_name(package_path):
 def main():
     session = requests.Session()
     while True:
-        current_focus = get_current_focus()
-        if current_focus:
-            package_path = get_package_path(current_focus)
-            if package_path:
-                package_name = get_package_name(package_path)
-                if package_name:
-                    data = {
-                        "secret": SECRET,
-                        "status": package_name
-                    }
-                    response = session.post(URL, json=data)
-                    if response.text:
-                        logger.info(f"Package: {package_name}, Response: {response.status_code} - {response.text}")
-                    else:
-                        logger.info(f"Package: {package_name}, Response: {response.status_code}")
+        try:
+            current_focus = get_current_focus()
+            if current_focus:
+                package_path = get_package_path(current_focus)
+                if package_path:
+                    package_name = get_package_name(package_path)
+                    if package_name:
+                        data = {
+                            "secret": SECRET,
+                            "status": package_name
+                        }
+                        response = session.post(URL, json=data)
+                        if response.text:
+                            logger.error(f"Package: {package_name}, Response: {response.status_code} - {response.text}")
+                        else:
+                            logger.info(f"Package: {package_name}, Response: {response.status_code}")
+        except Exception as e:
+            logger.error(f"Error: {e}")
         time.sleep(1)
 
 if __name__ == "__main__":
