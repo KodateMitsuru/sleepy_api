@@ -15,7 +15,7 @@ log_file_name = 'sleepy_log'
 log_file_path = os.path.join(cache_dir, log_file_name)
 log_handler = TimedRotatingFileHandler(
     log_file_path,
-    when='S',
+    when='midnight',
     interval=1,
     backupCount=7
 )
